@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+
+# OS junk files
+.DS_Store
+
+# Terraform build state
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# ZIP archives and binaries
+*.zip
+*.log
+
+# Image test files
+*.jpg

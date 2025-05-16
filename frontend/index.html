@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - Parking Tickets</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f8ff; /* baby blue */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-box {
+      background: white;
+      padding: 2.5em;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      width: 320px;
+      text-align: center;
+    }
+    h2 {
+      color: #3498db;
+      margin-top: 0;
+    }
+    input {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 15px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    input:focus {
+      border-color: #3498db;
+      outline: none;
+      box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .error {
+      color: #e74c3c;
+      margin-top: 15px;
+      font-size: 14px;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Admin Login</h2>
+    <form id="loginForm" onsubmit="return false;">
+      <input type="text" id="username" placeholder="Username" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button onclick="login()">Login</button>
+      <div class="error" id="error"></div>
+    </form>
+  </div>
+
+  <script>
+    // Check if user is already logged in
+    window.onload = function() {
+      if (localStorage.getItem('session') === 'true') {
+        window.location.href = 'dashboard.html';
+      }
+    };
+
+    function login() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errorBox = document.getElementById('error');
+
+      // Hardcoded credentials
+      const adminUser = 'admin';
+      const adminPass = 'ticket123';
+
+      if (username === adminUser && password === adminPass) {
+        localStorage.setItem('session', 'true');
+        window.location.href = 'dashboard.html';
+      } else {
+        errorBox.innerText = 'Invalid username or password';
+        // Clear password field for security
+        document.getElementById('password').value = '';
+      }
+    }
+
+    // Allow login on Enter key
+    document.getElementById('password').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        login();
+      }
+    });
+  </script>
+</body>
+</html>

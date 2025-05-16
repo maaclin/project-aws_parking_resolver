@@ -1,0 +1,299 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Parking Tickets</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f8ff;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    header {
+      background-color: #ffffff;
+      padding: 1em 2em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #d0e7ff;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    header h1 {
+      margin: 0;
+      color: #3498db;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      padding: 0.8em 1.5em;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    main {
+      padding: 2em;
+      max-width: 800px;
+      margin: 2em auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+    section {
+      margin-bottom: 2.5em;
+    }
+    h2 {
+      color: #3498db;
+      border-bottom: 1px solid #d0e7ff;
+      padding-bottom: 0.5em;
+    }
+    input[type="file"] {
+      display: block;
+      margin: 1em 0;
+      padding: 0.8em;
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px dashed #d0e7ff;
+      border-radius: 4px;
+      background-color: #fafcff;
+    }
+    .status-message {
+      margin-top: 1em;
+      padding: 1em;
+      border-radius: 4px;
+      display: none;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: block;
+    }
+    .ticket-list {
+      margin-top: 1.5em;
+    }
+    .ticket-item {
+      border: 1px solid #d0e7ff;
+      padding: 1.2em;
+      margin-bottom: 1em;
+      border-radius: 4px;
+      background-color: #f9fcff;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .ticket-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .empty-state {
+      text-align: center;
+      padding: 2em;
+      color: #7f8c8d;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Admin Dashboard</h1>
+    <button onclick="logout()">Logout</button>
+  </header>
+
+  <main>
+    <section>
+      <h2>Upload a Ticket</h2>
+      <div>
+        <input type="file" id="ticketImage" accept="image/*">
+        <button onclick="uploadTicket()">Upload Ticket</button>
+        <div id="uploadStatus" class="status-message"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Pending Tickets</h2>
+      <div id="ticketList" class="ticket-list"></div>
+    </section>
+  </main>
+
+  <script>
+    window.onload = function() {
+      checkAuth();
+    };
+
+    function checkAuth() {
+      if (localStorage.getItem('session') !== 'true') {
+        window.location.href = 'index.html';
+        return;
+      }
+      fetchTickets();
+    }
+
+    function logout() {
+      localStorage.removeItem('session');
+      window.location.href = 'index.html';
+    }
+
+    function uploadTicket() {
+      const fileInput = document.getElementById('ticketImage');
+      const statusBox = document.getElementById('uploadStatus');
+      const file = fileInput.files[0];
+
+      statusBox.className = 'status-message';
+      statusBox.innerText = '';
+
+      if (!file) {
+        statusBox.innerText = "Please select an image to upload.";
+        statusBox.classList.add('error');
+        return;
+      }
+
+      statusBox.innerHTML = "Uploading... <div class='loader'></div>";
+      statusBox.style.display = 'block';
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64Image = e.target.result.split(',')[1];
+
+        fetch("https://4f9gncmxoi.execute-api.eu-west-2.amazonaws.com/dev/upload", {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + localStorage.getItem('session')
+          },
+          body: JSON.stringify({ image: base64Image })
+        })
+        .then(res => {
+          if (!res.ok) throw new Error("Server returned status: " + res.status);
+          return res.json();
+        })
+        .then(data => {
+          statusBox.innerHTML = "Upload successful!";
+          statusBox.className = 'status-message success';
+          fileInput.value = '';
+          setTimeout(fetchTickets, 1000);
+        })
+        .catch(err => {
+          console.error("Upload error:", err);
+          statusBox.innerText = "Upload failed: " + err.message;
+          statusBox.className = 'status-message error';
+        });
+      };
+
+      reader.onerror = function() {
+        statusBox.innerText = "Error reading file.";
+        statusBox.className = 'status-message error';
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    function fetchTickets() {
+      const ticketList = document.getElementById('ticketList');
+      ticketList.innerHTML = "<div class='loader'></div>";
+
+      const sessionToken = localStorage.getItem('session');
+      if (!sessionToken) {
+        ticketList.innerHTML = `
+          <div class="empty-state">
+            <p>Error: Unauthorized. Please log in again.</p>
+            <button onclick="logout()">Go to Login</button>
+          </div>
+        `;
+        return;
+      }
+
+      fetch("https://ect3abwl5j.execute-api.eu-west-2.amazonaws.com/tickets", {
+        headers: {
+          "Authorization": "Bearer " + sessionToken
+        }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Server returned status: " + res.status);
+        return res.json();
+      })
+      .then(data => {
+        ticketList.innerHTML = "";
+
+        if (data.tickets && data.tickets.length > 0) {
+          data.tickets.forEach(ticket => {
+            const ticketDiv = document.createElement("div");
+            ticketDiv.className = "ticket-item";
+
+            let formattedDate = ticket.issue_date;
+            try {
+              if (ticket.issue_date) {
+                const date = new Date(ticket.issue_date);
+                if (!isNaN(date)) {
+                  formattedDate = date.toLocaleDateString('en-GB', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  });
+                }
+              }
+            } catch (e) {
+              console.error("Date formatting error:", e);
+              formattedDate = 'Invalid Date';
+            }
+
+            ticketDiv.innerHTML = `
+              <strong>License Plate:</strong> ${ticket.licence_plate || 'N/A'}<br>
+                <strong>Driver:</strong> ${ticket.driver_name || 'UNKNOWN'}<br>
+              <strong>Date:</strong> ${formattedDate}<br>
+              <strong>Authority:</strong> ${ticket.authority || 'N/A'}<br>
+              <strong>Status:</strong> 
+                <span style="color: ${ticket.status?.toLowerCase() === 'pending' ? '#e67e22' : '#2ecc71'}">
+                  ${ticket.status || 'N/A'}
+                </span>
+            `;
+
+            ticketList.appendChild(ticketDiv);
+          });
+        } else {
+          ticketList.innerHTML = `
+            <div class="empty-state">
+              <p>No tickets found.</p>
+              <p>Upload a new ticket to get started.</p>
+            </div>
+          `;
+        }
+      })
+      .catch(err => {
+        console.error("Fetch tickets error:", err);
+        ticketList.innerHTML = `
+          <div class="empty-state">
+            <p>Error loading tickets: ${err.message}</p>
+            <button onclick="fetchTickets()">Try Again</button>
+          </div>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>
