@@ -3,7 +3,7 @@
 
 This project automates the handling of parking/traffic tickets for rental companies using a fully serverless AWS-based pipeline. It integrates OCR, AI, and email notifications to eliminate manual ticket processing.
 
-![Architecture Diagram](project_diagram.png)
+![diagram-export-16-05-2025-20_17_53](https://github.com/user-attachments/assets/d7878f38-ff27-4621-94a4-9b54d1e6cb65)
 
 ---
 
